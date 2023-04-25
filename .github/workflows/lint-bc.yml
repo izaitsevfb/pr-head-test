@@ -21,7 +21,6 @@ jobs:
           path: pytorch
 
       - name: Checkout pytorch/test-infra repository
-        if: steps.check_user.outputs.allowed == 'true'
         uses: actions/checkout@v3
         with:
           repository: pytorch/test-infra
@@ -29,7 +28,6 @@ jobs:
 
       - name: Fetching PR base commit
         id: fetch_base_head
-        if: steps.check_user.outputs.allowed == 'true'
         working-directory: pytorch
         run: |
           echo "Fetching PR base commit"
@@ -64,7 +62,6 @@ jobs:
 
 
       - name: Build and run BC-linter
-        if: steps.check_user.outputs.allowed == 'true'
         working-directory: pytorch
         run: |
           set -eux
