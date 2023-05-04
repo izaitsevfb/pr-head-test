@@ -21,7 +21,7 @@ jobs:
           path: test11
 
       - name: Run BC Lint Action
-        uses: izaitsevfb/pr-head-test/bc-lint-action@main
+        uses: izaitsevfb/pr-head-test/.github/actions/bc-lint-action@main
         with:
           repo_path: test11
           base_sha: ${{ github.event.pull_request.base.sha }}
