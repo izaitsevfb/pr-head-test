@@ -40,22 +40,22 @@ runs:
         git merge "${{ inputs.head_sha }}" || MERGE_CONFLICT=1
         if [ -z "$MERGE_CONFLICT" ]; then
           NEW_HEAD_SHA=$(git rev-parse HEAD)
-          echo "new_head_sha=${NEW_HEAD_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "NEW_HEAD_SHA=${NEW_HEAD_SHA}" >> "${GITHUB_ENV}"
         else
           echo "Hit merge conflict, skipping BC-linter. Rebase your PR to resolve the conflict."
         fi
 
     - name: Build and run BC-linter
-      if: steps.merge_changes.outputs.new_head_sha != ''
+      if: env.NEW_HEAD_SHA != ''
       working-directory: ${{ inputs.repo_path }}
       shell: bash
       run: |
         set -eux
         ../_test-infra/tools/stronghold/bin/build-check-api-compatibility
         ../_test-infra/tools/stronghold/bin/check-api-compatibility \
-            --base-commit=${{ inputs.base_sha }}
-            --head-commit=${{ steps.merge_changes.outputs.new_head_sha }} \
-            ${{ steps.check_label.outputs.suppression }}
+            --base-commit=${{ inputs.base_sha }} \
+            --head-commit=${{ env.NEW_HEAD_SHA }} \
+            ${{ inputs.suppression == 'true' && '--suppressed' || '' }}
         
     - name: Display documentation link if failed
       if: ${{ failure() && inputs.docs_link }}
