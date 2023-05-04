@@ -18,49 +18,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          path: pytorch
+          path: test11
 
-      - name: Checkout pytorch/test-infra repository
-        uses: actions/checkout@v2
+      - name: Run BC Lint Action
+        uses: izaitsevfb/pr-head-test/actions/bc-lint-action@main
         with:
-          repository: pytorch/test-infra
-          path: test-infra
-
-      - name: Get base and head SHAs
-        working-directory: pytorch
-        run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          BASE_SHA=${{ github.event.pull_request.base.sha }}
-          HEAD_SHA=${{ github.event.pull_request.head.sha }}
-          echo "BASE_SHA=$BASE_SHA" >> $GITHUB_ENV
-          echo "HEAD_SHA=$HEAD_SHA" >> $GITHUB_ENV
-
-      - name: Merge PR changes onto base
-        id: merge_changes
-        working-directory: pytorch
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git reset --hard $BASE_SHA
-          git merge $HEAD_SHA || MERGE_CONFLICT=1
-          echo "MERGE_CONFLICT=$MERGE_CONFLICT" >> $GITHUB_ENV
-          if [ -z "$MERGE_CONFLICT" ]; then
-            NEW_HEAD_SHA=$(git rev-parse HEAD)
-            echo "NEW_HEAD_SHA=$NEW_HEAD_SHA" >> $GITHUB_ENV
-          fi
-
-      - name: Build and run BC-linter
-        if: env.MERGE_CONFLICT != '1'
-        working-directory: pytorch
-        run: |
-          set -eux
-          ../test-infra/tools/stronghold/bin/build-check-api-compatibility
-
-          # Run the BC-linter script.
-          # The script checks for BC-breaking changes in the PR.
-          # When suppressed by label or #suppress-api-compatibility-check tag in the commit message
-          # the job will not fail and will output notices instead of warnings.
-          ../test-infra/tools/stronghold/bin/check-api-compatibility \
-              --base-commit=$BASE_SHA \
-              --head-commit=$NEW_HEAD_SHA \
-              ${{ steps.check_label.outputs.suppression }}
+          repo_path: test11
+          base_sha: ${{ github.event.pull_request.base.sha }}
+          head_sha: ${{ github.event.pull_request.head.sha }}
+          suppression: ${{ contains(github.event.pull_request.labels.*.name, 'suppress-api-compatibility-check') || contains(github.event.pull_request.labels.*.name, 'suppress-bc-linter') }}
+          docs_link: 'https://example.com/docs'
