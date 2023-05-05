@@ -1,19 +1,19 @@
 name: 'BC Lint Action'
-description: 'A reusable action for running the BC Lint workflow'
+description: 'A reusable action for running the BC Lint workflow. See tools/stronghold/README.md for more information.'
 inputs:
-  repo_path:
-    description: 'Path to the checked-out repository'
+  repo:
+    description: 'Repository to run BC Lint on'
     required: true
   base_sha:
-    description: 'PR base SHA'
+    description: 'PR base SHA (events.pull_request.base.sha)'
     required: true
   head_sha:
-    description: 'PR head SHA'
+    description: 'PR head SHA (events.pull_request.head.sha)'
     required: true
   suppression:
-    description: 'Suppression flag'
+    description: 'Suppression flag (true/false)'
     required: false
-    default: ''
+    default: 'false'
   docs_link:
     description: 'Link to the docs to display in case of failure'
     required: false
@@ -27,9 +27,18 @@ runs:
         repository: pytorch/test-infra
         path: _test-infra
 
+    - name: Checkout ${{ inputs.repo }}
+      uses: malfet/checkout@silent-checkout
+      with:
+        ref: ${{ inputs.head_sha }}
+        fetch-depth: -1
+        submodules: false
+        quiet-checkout: true
+        path: _repo
+
     - name: Merge PR changes onto base
       id: merge_changes
-      working-directory: ${{ inputs.repo_path }}
+      working-directory: _repo
       shell: bash
       run: |
         git config --local user.email "action@github.com"
@@ -40,26 +49,32 @@ runs:
         git merge "${{ inputs.head_sha }}" || MERGE_CONFLICT=1
         if [ -z "$MERGE_CONFLICT" ]; then
           NEW_HEAD_SHA=$(git rev-parse HEAD)
-          echo "NEW_HEAD_SHA=${NEW_HEAD_SHA}" >> "${GITHUB_ENV}"
+          echo "new_head_sha=${NEW_HEAD_SHA}" >> "${GITHUB_OUTPUT}"
         else
-          echo "Hit merge conflict, skipping BC-linter. Rebase your PR to resolve the conflict."
+          echo "Hit merge conflict, skipping BC-linter. You PR is too old. Please rebase it to resolve the conflict."
         fi
 
     - name: Build and run BC-linter
-      if: env.NEW_HEAD_SHA != ''
-      working-directory: ${{ inputs.repo_path }}
+      if: steps.merge_changes.outputs.new_head_sha != ''
+      working-directory: _repo
       shell: bash
       run: |
         set -eux
         ../_test-infra/tools/stronghold/bin/build-check-api-compatibility
         ../_test-infra/tools/stronghold/bin/check-api-compatibility \
             --base-commit=${{ inputs.base_sha }} \
-            --head-commit=${{ env.NEW_HEAD_SHA }} \
+            --head-commit=${{ steps.merge_changes.outputs.new_head_sha }} \
             ${{ inputs.suppression == 'true' && '--suppressed' || '' }}
-        
+
     - name: Display documentation link if failed
       if: ${{ failure() && inputs.docs_link }}
       run: |
         echo "BC-linter failed. Please check the following documentation for resolving issues:"
         echo "${{ inputs.docs_link }}"
+      shell: bash
+
+    - name: Cleanup
+      run: |
+        rm -rf _repo
+        rm -rf _test-infra
       shell: bash
