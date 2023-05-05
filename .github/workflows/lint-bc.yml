@@ -14,16 +14,10 @@ jobs:
   bc_linter:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout this repo
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          path: test11
-
       - name: Run BC Lint Action
         uses: izaitsevfb/pr-head-test/.github/actions/bc-lint-action@main
         with:
-          repo_path: test11
+          repo: ${{ github.event.pull_request.head.repo.full_name }}
           base_sha: ${{ github.event.pull_request.base.sha }}
           head_sha: ${{ github.event.pull_request.head.sha }}
           suppression: ${{ contains(github.event.pull_request.labels.*.name, 'suppress-api-compatibility-check') || contains(github.event.pull_request.labels.*.name, 'suppress-bc-linter') }}
