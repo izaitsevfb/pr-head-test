@@ -1,0 +1,21 @@
+name: 'Test outputs'
+description: 'Action that sets an output and uses it in a composite action'
+runs:
+  using: 'composite'
+  steps:
+    - name: Set output
+      id: step1
+      shell: bash
+      run: |
+        echo "value=1" >> "${GITHUB_OUTPUT}"
+
+    - name: Conditional step
+      shell: bash
+      if: steps.step1.outputs.value == '1'
+      run: |
+        echo "value is 1"
+
+    - name: Use output
+      shell: bash
+      run: |
+        echo "value is ${{ steps.step1.outputs.value }}"
