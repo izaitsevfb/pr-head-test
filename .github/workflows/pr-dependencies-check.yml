@@ -30,7 +30,8 @@ jobs:
           PR_NUMBER=$(echo "$PR_NUMBER" | grep -oE -m 1 '^(https://github\.com/pytorch/pytorch/pull/|#)?[0-9]+$' | grep -oE '[0-9]+')
           
           if [[ -z "$PR_NUMBER" ]]; then
-              echo "Failed to extract PR number from $PR_NUMBER"
+              echo "::error::Failed to extract PR number from $PR_NUMBER"
+              echo "::notice::Make sure to provide a valid pytorch PR number or URL"
               exit 1
           fi
           
