@@ -26,10 +26,9 @@ jobs:
           PR_NUMBER="${{ github.event.inputs.pr_number }}"
           
           # extract PR number from URL
-          # make sure that multiline input is handled 
-          PR_NUMBER=$(echo "$PR_NUMBER" | grep -oE -m 1 '^(https://github\.com/pytorch/pytorch/pull/|#)?[0-9]+$' | grep -oE '[0-9]+')
-          
-          if [[ -z "$PR_NUMBER" ]]; then
+          if ! PR_NUMBER=$(echo "$PR_NUMBER" | \
+                grep -oE -m 1 '^(https://github\.com/pytorch/pytorch/pull/|#)?[0-9]+$' | \
+                grep -oE '[0-9]+'); then
               echo "::error::Failed to extract PR number from $PR_NUMBER"
               echo "::notice::Make sure to provide a valid pytorch PR number or URL"
               exit 1
