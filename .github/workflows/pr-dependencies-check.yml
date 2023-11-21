@@ -34,7 +34,7 @@ jobs:
               exit 1
           fi
           
-          echo "pr-number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           
       - name: Checkout Pytorch repository
         uses: malfet/checkout@silent-checkout
