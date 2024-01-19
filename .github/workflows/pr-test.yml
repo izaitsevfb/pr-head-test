@@ -16,6 +16,4 @@ jobs:
         run: |
           PR_DETAILS=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/pytorch/pytorch/pulls/${{ github.event.inputs.pr_number }})
           PR_DESCRIPTION=$(echo $PR_DETAILS | jq -r '.body')
-          echo "PR_DESCRIPTION=$PR_DESCRIPTION" >> $GITHUB_ENV
-      - name: Print PR description
-        run: echo $PR_DESCRIPTION
+          echo "$PR_DESCRIPTION"
