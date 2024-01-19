@@ -1,0 +1,21 @@
+name: Fetch PR Description
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number'
+        required: true
+
+jobs:
+  fetch_pr_description:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch PR details
+        id: fetch_pr
+        run: |
+          PR_DETAILS=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/pytorch/pytorch/pulls/${{ github.event.inputs.pr_number }})
+          PR_DESCRIPTION=$(echo $PR_DETAILS | jq -r '.body')
+          echo "PR_DESCRIPTION=$PR_DESCRIPTION" >> $GITHUB_ENV
+      - name: Print PR description
+        run: echo $PR_DESCRIPTION
