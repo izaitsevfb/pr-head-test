@@ -23,7 +23,7 @@ jobs:
         run: |
           orig_branch="${{ github.base_ref }}/orig"
           echo "$orig_branch"
-          orig_branch="${orig_branch/\/base\//}"
+          orig_branch="${orig_branch/base\//}"
           echo "$orig_branch"
 
           end=$((SECONDS+100))
