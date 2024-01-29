@@ -31,7 +31,7 @@ jobs:
           end=$((SECONDS+WAIT_SECONDS))
           branch_exists=0
           while [ $SECONDS -lt $end ]; do
-           git fetch --prune origin "${orig_branch}"
+           git fetch --prune origin "${orig_branch}" || true
            if git rev-parse --verify "origin/${orig_branch}"; then
              branch_exists=1
              break
