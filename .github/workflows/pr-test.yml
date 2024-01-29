@@ -21,23 +21,24 @@ jobs:
       - name: Get PR base branch
         id: get_pr_base_branch
         run: |
-          orig_branch="${{ github.base_ref }}/orig"
+          orig_branch="${{ github.base_ref }}"
           echo "$orig_branch"
-          orig_branch="${orig_branch/base\//}"
+          orig_branch=$(echo "$orig_branch" | sed 's|/base$|/orig|')
           echo "$orig_branch"
 
-          end=$((SECONDS+100))
+          WAIT_SECONDS=600
+          end=$((SECONDS+WAIT_SECONDS))
           branch_exists=0
           while [ $SECONDS -lt $end ]; do
-           git fetch origin
+           git fetch --prune origin "${orig_branch}"
            if git rev-parse --verify "origin/${orig_branch}"; then
              branch_exists=1
              break
            fi
-           echo "Waiting for branch..."
+           echo "Waiting for branch ${orig_branch} to exist..."
            sleep 30  # Wait for 30 seconds before retrying
           done
           if [ $branch_exists -eq 0 ]; then
-           echo "Branch not found after 10 minutes."
+           echo "Branch not found after ${WAIT_SECONDS} seconds"
            exit 1
           fi
