@@ -1,4 +1,4 @@
-name: Fetch PR Description
+name: Fetch orig branch
 
 on:
   workflow_dispatch:
@@ -6,16 +6,40 @@ on:
       pr_number:
         description: 'PR number'
         required: true
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [gh/**/base]
 
 jobs:
-  fetch_pr_description:
+
+  pr_base_branch:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch PR details
-        id: fetch_pr
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get PR base branch
+        id: get_pr_base_branch
         run: |
-          PR_DETAILS=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/pytorch/pytorch/pulls/${{ github.event.inputs.pr_number }})
-          PR_DESCRIPTION=$(echo $PR_DETAILS | jq -r '.body')
-          echo "PR_DESCRIPTION=$PR_DESCRIPTION" >> $GITHUB_ENV
-      - name: Print PR description
-        run: echo $PR_DESCRIPTION
+          # orig_branch="${{ github.base_ref }}"
+          orig_branch="gh/izaitsevfb/6/base"     
+          echo "$orig_branch"
+          orig_branch=$(echo "$orig_branch" | sed 's|/base$|/orig|')
+          echo "$orig_branch"
+
+          WAIT_SECONDS=600
+          end=$((SECONDS+WAIT_SECONDS))
+          branch_exists=0
+          while [ $SECONDS -lt $end ]; do
+           git fetch --prune origin "${orig_branch}" || true
+           if git rev-parse --verify "origin/${orig_branch}"; then
+             branch_exists=1
+             break
+           fi
+           echo "Waiting for branch ${orig_branch} to exist..."
+           sleep 30  # Wait for 30 seconds before retrying
+          done
+          if [ $branch_exists -eq 0 ]; then
+           echo "Branch not found after ${WAIT_SECONDS} seconds"
+           exit 1
+          fi
