@@ -21,7 +21,8 @@ jobs:
       - name: Get PR base branch
         id: get_pr_base_branch
         run: |
-          orig_branch="${{ github.base_ref }}"
+#          orig_branch="${{ github.base_ref }}"
+          orig_branch="gh/izaitsevfb/6/base"     
           echo "$orig_branch"
           orig_branch=$(echo "$orig_branch" | sed 's|/base$|/orig|')
           echo "$orig_branch"
