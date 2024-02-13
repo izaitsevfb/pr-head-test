@@ -1,0 +1,13 @@
+name: Print PR Labels
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  print-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print labels
+        run: |
+          echo "PR labels: ${{ join(github.event.pull_request.labels.*.name, ', ') }}"
