@@ -8,9 +8,6 @@ on:
         type: string
         default: ""
     outputs:
-      run_all:
-        description: "true if no job filter provided"
-        value: ${{ jobs.compute.outputs.run_all }}
       jobs:
         description: "Space-padded job filter string"
         value: ${{ jobs.compute.outputs.jobs }}
@@ -19,16 +16,13 @@ jobs:
   compute:
     runs-on: ubuntu-latest
     outputs:
-      run_all: ${{ steps.set.outputs.run_all }}
       jobs: ${{ steps.set.outputs.jobs }}
     steps:
       - id: set
         run: |
           jobs="${{ inputs.jobs-to-include }}"
           if [ -n "$jobs" ]; then
-            echo "run_all=false" >> "$GITHUB_OUTPUT"
             echo "jobs= ${jobs} " >> "$GITHUB_OUTPUT"
           else
-            echo "run_all=true" >> "$GITHUB_OUTPUT"
             echo "jobs=" >> "$GITHUB_OUTPUT"
           fi

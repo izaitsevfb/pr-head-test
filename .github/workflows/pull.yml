@@ -27,7 +27,7 @@ jobs:
     needs: job-filter
     name: linux-mock-build
     runs-on: ubuntu-latest
-    if: ${{ needs.job-filter.outputs.run_all == 'true' || contains(needs.job-filter.outputs.jobs, ' linux-mock-build ') }}
+    if: ${{ needs.job-filter.outputs.jobs == '' || contains(needs.job-filter.outputs.jobs, ' linux-mock-build ') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
   test:
     name: linux-mock-test
     runs-on: ubuntu-latest
-    if: ${{ needs.job-filter.outputs.run_all == 'true' || contains(needs.job-filter.outputs.jobs, ' linux-mock-test ') }}
+    if: ${{ needs.job-filter.outputs.jobs == '' || contains(needs.job-filter.outputs.jobs, ' linux-mock-test ') }}
     needs:
       - build
       - job-filter
