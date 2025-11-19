@@ -1,0 +1,59 @@
+name: pull-mock
+
+on:
+  workflow_dispatch:
+    inputs:
+      jobs-to-include:
+        description: "Space-separated list of job display names to run (empty = all)"
+        required: false
+        default: ""
+        type: string
+      tests-to-include:
+        description: "Space-separated tests to include (empty = default)"
+        required: false
+        default: ""
+        type: string
+
+env:
+  JOBS_TO_INCLUDE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.jobs-to-include != '' && format(' {0} ', github.event.inputs.jobs-to-include) || '' }}
+
+jobs:
+  build:
+    name: linux-mock-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Mock build
+        run: |
+          echo "Pretending to build"
+
+  test:
+    if: ${{ env.JOBS_TO_INCLUDE == '' || contains(env.JOBS_TO_INCLUDE, ' linux-mock-test ') }}
+    name: linux-mock-test
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      TESTS_TO_INCLUDE: ${{ github.event.inputs.tests-to-include || '' }}
+      NO_TD: ${{ github.event.inputs.tests-to-include != '' && '1' || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show filters
+        run: |
+          echo "JOBS_TO_INCLUDE='${JOBS_TO_INCLUDE}'"
+          echo "TESTS_TO_INCLUDE='${TESTS_TO_INCLUDE}'"
+          echo "NO_TD='${NO_TD}'"
+
+      - name: Mock run_test.py
+        run: |
+          python - <<'PY'
+import os, shlex
+tests_env = os.environ.get("TESTS_TO_INCLUDE", "")
+parsed = shlex.split(tests_env) if tests_env else ["ALL_TESTS"]
+td_state = "disabled" if os.environ.get("NO_TD") else "enabled"
+print(f"Would run tests: {parsed}")
+print(f"Target Determination would be {td_state}")
+PY
