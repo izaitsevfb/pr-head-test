@@ -50,10 +50,10 @@ jobs:
       - name: Mock run_test.py
         run: |
           python - <<'PY'
-import os, shlex
-tests_env = os.environ.get("TESTS_TO_INCLUDE", "")
-parsed = shlex.split(tests_env) if tests_env else ["ALL_TESTS"]
-td_state = "disabled" if os.environ.get("NO_TD") else "enabled"
-print(f"Would run tests: {parsed}")
-print(f"Target Determination would be {td_state}")
-PY
+          import os, shlex
+          tests_env = os.environ.get("TESTS_TO_INCLUDE", "")
+          parsed = shlex.split(tests_env) if tests_env else ["ALL_TESTS"]
+          td_state = "disabled" if os.environ.get("NO_TD") else "enabled"
+          print(f"Would run tests: {parsed}")
+          print(f"Target Determination would be {td_state}")
+          PY
