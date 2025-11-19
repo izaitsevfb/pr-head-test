@@ -14,13 +14,17 @@ on:
         default: ""
         type: string
 
-env:
-  JOBS_TO_INCLUDE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.jobs-to-include != '' && format(' {0} ', github.event.inputs.jobs-to-include) || '' }}
-
 jobs:
+  job-filter:
+    uses: ./.github/workflows/job-filter.yml
+    with:
+      jobs-to-include: ${{ github.event.inputs.jobs-to-include }}
+
   build:
+    needs: job-filter
     name: linux-mock-build
     runs-on: ubuntu-latest
+    if: ${{ needs.job-filter.outputs.run_all == 'true' || contains(needs.job-filter.outputs.jobs, ' linux-mock-build ') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,10 +34,12 @@ jobs:
           echo "Pretending to build"
 
   test:
-    if: ${{ env.JOBS_TO_INCLUDE == '' || contains(env.JOBS_TO_INCLUDE, ' linux-mock-test ') }}
     name: linux-mock-test
     runs-on: ubuntu-latest
-    needs: build
+    if: ${{ needs.job-filter.outputs.run_all == 'true' || contains(needs.job-filter.outputs.jobs, ' linux-mock-test ') }}
+    needs:
+      - build
+      - job-filter
     env:
       TESTS_TO_INCLUDE: ${{ github.event.inputs.tests-to-include || '' }}
       NO_TD: ${{ github.event.inputs.tests-to-include != '' && '1' || '' }}
@@ -43,7 +49,7 @@ jobs:
 
       - name: Show filters
         run: |
-          echo "JOBS_TO_INCLUDE='${JOBS_TO_INCLUDE}'"
+          echo "jobs='${{ needs.job-filter.outputs.jobs }}'"
           echo "TESTS_TO_INCLUDE='${TESTS_TO_INCLUDE}'"
           echo "NO_TD='${NO_TD}'"
 
